@@ -120,6 +120,61 @@
   cursor: not-allowed;
 }
 
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.password-input {
+  padding: 12px 16px;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  background-color: #262626;
+  color: #ffffff;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #007AFF;
+  background-color: #333333;
+}
+
+.password-input::placeholder {
+  color: #999999;
+}
+
+.login-button {
+  padding: 12px 24px;
+  background-color: #007AFF;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-button:hover {
+  background-color: #0051D5;
+  transform: translateY(-2px);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+.password-error {
+  color: #FF3B30;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 8px;
+}
+
 /* 에러 섹션 */
 .error-section {
   text-align: center;
