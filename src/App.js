@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReviewPage from './ReviewPage';
 import ReviewListPage from './ReviewListPage';
+import AdminPage from './AdminPage';
 import './App.css';
 
 export default function App() {
@@ -20,6 +21,8 @@ export default function App() {
         setSelectedProgram(program);
         setCurrentPage('write');
       }
+    } else if (page === 'admin') {
+      setCurrentPage('admin');
     } else {
       setCurrentPage('menu');
     }
@@ -48,6 +51,8 @@ export default function App() {
     return <ReviewPage program={selectedProgram} onGoBack={handleGoToMenu} />;
   } else if (currentPage === 'reviews') {
     return <ReviewListPage onGoBack={handleGoToMenu} />;
+  } else if (currentPage === 'admin') {
+    return <AdminPage onGoBack={handleGoToMenu} />;
   }
 }
 
