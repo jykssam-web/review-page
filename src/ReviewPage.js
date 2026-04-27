@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { PROGRAM_CONFIG, getProgramName } from './config';
 import './ReviewPage.css';
 
-export default function ReviewPage() {
-  const [program, setProgram] = useState('');
+export default function ReviewPage({ program, onGoBack }) {
   const [schoolName, setSchoolName] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const [rating, setRating] = useState(5);
@@ -13,20 +12,6 @@ export default function ReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [isError, setIsError] = useState(false);
-
-  useEffect(() => {
-    // URL 파라미터에서 program 추출
-    const params = new URLSearchParams(window.location.search);
-    const programParam = params.get('program');
-    
-    if (programParam && PROGRAM_CONFIG[programParam]) {
-      setProgram(programParam);
-    } else if (programParam) {
-      // 유효하지 않은 프로그램
-      setIsError(true);
-      setSubmitMessage('유효하지 않은 프로그램입니다.');
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,8 +72,8 @@ export default function ReviewPage() {
     return (
       <div className="review-page error-page">
         <div className="error-container">
-          <p>유효하지 않은 프로그램입니다.</p>
-          <button onClick={() => window.history.back()}>뒤로가기</button>
+          <p>프로그램이 선택되지 않았습니다.</p>
+          <button onClick={onGoBack}>뒤로가기</button>
         </div>
       </div>
     );
@@ -101,10 +86,10 @@ export default function ReviewPage() {
       <div className="review-container">
         {/* 헤더 */}
         <div className="review-header">
-          <button className="back-button" onClick={() => window.history.back()}>
+          <button className="back-button" onClick={onGoBack}>
             ← 뒤로가기
           </button>
-          <h1>프로그램 리뷰</h1>
+          <h1>리뷰 작성</h1>
         </div>
 
         {/* 폼 */}
