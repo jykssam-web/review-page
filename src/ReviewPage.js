@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
-import { PROGRAM_CONFIG, getProgramName } from './config';
+import { getProgramName } from './config';
 import './ReviewPage.css';
 
 export default function ReviewPage({ program, onGoBack }) {
