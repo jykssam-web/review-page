@@ -1,38 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, orderBy, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
-import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { PROGRAM_CONFIG } from './config';
 import './AdminPage.css';
 
-// Firebase Auth 초기화
-const firebaseConfig = {
-  apiKey: "AIzaSyBL-aN5qf0SJzFgxvuQwjKxGuE5KgXPuKI",
-  projectId: "gen-lang-client-0617105081",
-  appId: "1:84076770878:web:b1b279a176354212b0036f",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const ADMIN_EMAIL = 'jykssam@gmail.com';
 
 export default function AdminPage({ onGoBack }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const [filteredReviews, setFilteredReviews] = useState([]);
   const [selectedProgram, setSelectedProgram] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, pending, approved
+  const [filterStatus, setFilterStatus] = useState('all');
+  const auth = getAuth();
 
   useEffect(() => {
-    // 현재 사용자 확인
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
     });
-
     return unsubscribe;
-  }, []);
+  }, [auth]);
 
   useEffect(() => {
     if (user && user.email === ADMIN_EMAIL) {
@@ -40,21 +28,44 @@ export default function AdminPage({ onGoBack }) {
     }
   }, [user]);
 
-  useEffect(() => {
-    filterReviews();
-  }, [reviews, selectedProgram, filterStatus, filterReviews]);
+  const fetchReviews = async () => {
+    try {
+      const q = query(collection(db, 'reviews'), orderBy('timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const reviewsList = querySnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+        timestamp: docSnap.data().timestamp?.toDate()
+      }));
+      
+      setReviews(reviewsList);
+    } catch (error) {
+      console.error('리뷰 불러오기 실패:', error);
+    }
+  };
+
+  const getFilteredReviews = () => {
+    let filtered = reviews;
+
+    if (selectedProgram) {
+      filtered = filtered.filter(r => r.program === selectedProgram);
+    }
+
+    if (filterStatus === 'pending') {
+      filtered = filtered.filter(r => !r.isPublic);
+    } else if (filterStatus === 'approved') {
+      filtered = filtered.filter(r => r.isPublic);
+    }
+
+    return filtered;
+  };
 
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user.email !== ADMIN_EMAIL) {
-        await signOut(auth);
-        alert('관리자 이메일로만 접근 가능합니다.');
-        setUser(null);
-      }
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error('로그인 실패:', error);
       alert('로그인에 실패했습니다.');
@@ -70,39 +81,6 @@ export default function AdminPage({ onGoBack }) {
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
-  };
-
-  const fetchReviews = async () => {
-    try {
-      const q = query(collection(db, 'reviews'), orderBy('timestamp', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const reviewsList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate()
-      }));
-      
-      setReviews(reviewsList);
-    } catch (error) {
-      console.error('리뷰 불러오기 실패:', error);
-    }
-  };
-
-  const filterReviews = () => {
-    let filtered = reviews;
-
-    if (selectedProgram) {
-      filtered = filtered.filter(r => r.program === selectedProgram);
-    }
-
-    if (filterStatus === 'pending') {
-      filtered = filtered.filter(r => !r.isPublic);
-    } else if (filterStatus === 'approved') {
-      filtered = filtered.filter(r => r.isPublic);
-    }
-
-    setFilteredReviews(filtered);
   };
 
   const handleApprove = async (reviewId) => {
@@ -165,7 +143,8 @@ export default function AdminPage({ onGoBack }) {
     });
   };
 
-  // 로그인 전
+  const filteredReviews = getFilteredReviews();
+
   if (!user) {
     return (
       <div className="admin-page">
@@ -190,7 +169,6 @@ export default function AdminPage({ onGoBack }) {
     );
   }
 
-  // 관리자가 아님
   if (user.email !== ADMIN_EMAIL) {
     return (
       <div className="admin-page">
@@ -209,11 +187,9 @@ export default function AdminPage({ onGoBack }) {
     );
   }
 
-  // 관리자 대시보드
   return (
     <div className="admin-page">
       <div className="admin-container">
-        {/* 헤더 */}
         <div className="admin-header">
           <div className="header-top">
             <button className="back-button" onClick={onGoBack}>
@@ -229,7 +205,6 @@ export default function AdminPage({ onGoBack }) {
           </div>
         </div>
 
-        {/* 필터 */}
         <div className="filter-section">
           <div className="filter-row">
             <div className="filter-group">
@@ -265,7 +240,6 @@ export default function AdminPage({ onGoBack }) {
           </div>
         </div>
 
-        {/* 리뷰 목록 */}
         <div className="reviews-section">
           {filteredReviews.length > 0 ? (
             <div className="admin-reviews-list">
