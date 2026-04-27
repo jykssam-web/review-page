@@ -1,32 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, orderBy, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { PROGRAM_CONFIG } from './config';
 import './AdminPage.css';
 
-const ADMIN_EMAIL = 'jykssam@gmail.com';
+const ADMIN_PASSWORD = 'rhksflwksms0!';
 
 export default function AdminPage({ onGoBack }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [reviews, setReviews] = useState([]);
   const [selectedProgram, setSelectedProgram] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const auth = getAuth();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
-  }, [auth]);
-
-  useEffect(() => {
-    if (user && user.email === ADMIN_EMAIL) {
+    if (isAuthenticated) {
       fetchReviews();
     }
-  }, [user]);
+  }, [isAuthenticated]);
 
   const fetchReviews = async () => {
     try {
@@ -45,6 +37,24 @@ export default function AdminPage({ onGoBack }) {
     }
   };
 
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('비밀번호가 틀렸습니다.');
+      setPassword('');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPassword('');
+    setPasswordError('');
+  };
+
   const getFilteredReviews = () => {
     let filtered = reviews;
 
@@ -59,28 +69,6 @@ export default function AdminPage({ onGoBack }) {
     }
 
     return filtered;
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('로그인 실패:', error);
-      alert('로그인에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
   };
 
   const handleApprove = async (reviewId) => {
@@ -145,7 +133,7 @@ export default function AdminPage({ onGoBack }) {
 
   const filteredReviews = getFilteredReviews();
 
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <div className="admin-page">
         <div className="admin-container">
@@ -154,33 +142,25 @@ export default function AdminPage({ onGoBack }) {
               ← 뒤로가기
             </button>
             <h1>🔐 관리자 페이지</h1>
-            <p>Google 계정으로 로그인하세요</p>
+            <p>비밀번호를 입력하세요</p>
             
-            <button 
-              className="google-login-button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-            >
-              {loading ? '로그인 중...' : '🔷 Google로 로그인'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+            <form onSubmit={handlePasswordSubmit} className="password-form">
+              <input
+                type="password"
+                className="password-input"
+                placeholder="비밀번호 입력"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+              <button type="submit" className="login-button">
+                로그인
+              </button>
+            </form>
 
-  if (user.email !== ADMIN_EMAIL) {
-    return (
-      <div className="admin-page">
-        <div className="admin-container">
-          <div className="error-section">
-            <h1>접근 불가</h1>
-            <p>관리자 이메일로만 접근 가능합니다.</p>
-            <p className="current-email">현재 로그인: {user.email}</p>
-            
-            <button className="logout-button" onClick={handleLogout}>
-              로그아웃
-            </button>
+            {passwordError && (
+              <p className="password-error">{passwordError}</p>
+            )}
           </div>
         </div>
       </div>
@@ -196,12 +176,9 @@ export default function AdminPage({ onGoBack }) {
               ← 뒤로가기
             </button>
             <h1>🔐 관리자 대시보드</h1>
-            <div className="user-info">
-              <span>{user.email}</span>
-              <button className="logout-button" onClick={handleLogout}>
-                로그아웃
-              </button>
-            </div>
+            <button className="logout-button" onClick={handleLogout}>
+              로그아웃
+            </button>
           </div>
         </div>
 
