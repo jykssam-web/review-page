@@ -42,7 +42,7 @@ export default function AdminPage({ onGoBack }) {
 
   useEffect(() => {
     filterReviews();
-  }, [reviews, selectedProgram, filterStatus]);
+  }, [reviews, selectedProgram, filterStatus, filterReviews]);
 
   const handleGoogleLogin = async () => {
     try {
